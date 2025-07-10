@@ -22,14 +22,6 @@ class MessageSent implements ShouldBroadcastNow
    {
        $this->message = $message;
        
-       // Log when message is being broadcast
-       Log::info('Broadcasting message', [
-           'message_id' => $message->message_id,
-           'chat_id' => $message->chat_id,
-           'sender_id' => $message->sender_id,
-           'text' => $message->text,
-           'channel' => 'chat.' . $message->chat_id
-       ]);
    }
    
    public function broadcastOn()
@@ -53,12 +45,6 @@ class MessageSent implements ShouldBroadcastNow
                ],
            ]
        ];
-       
-       // Log the actual data being broadcast
-       Log::info('Message broadcast data', [
-           'channel' => 'chat.' . $this->message->chat_id,
-           'data' => $data
-       ]);
        
        return $data;
    }

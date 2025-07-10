@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use App\Events\MessageSent;
+use App\Events\MessageDeleted;
 
 class MessageController extends Controller
 {
@@ -202,6 +203,14 @@ class MessageController extends Controller
             ], 403);
         }
 
+        if (!$message) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Message not found'
+            ], 404);
+        }
+        $chatId = $message->chat_id;
+
         if ($request->delete_for_everyone && $message->sender_id == $userId) {
             // Soft delete for everyone - insert new status only if not already deleted
             $chatMembers = ChatMember::where('chat_id', $message->chat_id)
@@ -225,6 +234,7 @@ class MessageController extends Controller
                 ]);
             }
 
+            broadcast(new MessageDeleted($messageId, $chatId));
             return response()->json([
                 'success' => true,
                 'message' => 'Message deleted for everyone'
@@ -251,22 +261,4 @@ class MessageController extends Controller
             ]);
         }
     }
-
-
-
-    // Get unread message count for user
-    // public function unreadCount(Request $request): JsonResponse
-    // {
-    //     $userId = Auth::user()->user_id;
-
-    //     $unreadCount = MessageStatus::where('user_id', $userId)
-    //         ->where('is_read', false)
-    //         ->where('is_deleted', false)
-    //         ->count();
-
-    //     return response()->json([
-    //         'success' => true,
-    //         'data' => ['unread_count' => $unreadCount]
-    //     ]);
-    // }
 }
