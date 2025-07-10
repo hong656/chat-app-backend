@@ -17,7 +17,7 @@ use App\Events\MessageSent;
 class MessageController extends Controller
 {
     // Send a message
-    public function store(Request $request): JsonResponse
+        public function store(Request $request): JsonResponse
     {
         $request->validate([
             'chat_id' => 'required|exists:chats,chat_id',
@@ -26,9 +26,8 @@ class MessageController extends Controller
             'replied_to_message_id' => 'nullable|exists:messages,message_id'
         ]);
 
-        $senderId = Auth::user()->user_id;
+        $senderId = Auth::user()->user_id; // Get the user_id from the authenticated user
 
-        // Check if user is member of the chat
         $isMember = ChatMember::where('chat_id', $request->chat_id)
             ->where('user_id', $senderId)
             ->exists();
@@ -37,7 +36,7 @@ class MessageController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'User is not a member of this chat'
-            ], 403);
+            ], 403);  // This 403 is different from the broadcasting 403!
         }
 
         DB::beginTransaction();
@@ -65,7 +64,8 @@ class MessageController extends Controller
 
             $message->load(['sender:user_id,name', 'repliedTo:message_id,text,sender_id']);
 
-            broadcast(new MessageSent($message))->toOthers();
+            // Broadcast the event.  Don't use toOthers() here.
+            broadcast(new MessageSent($message));
 
             return response()->json([
                 'success' => true,
